@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<title>Blog Post</title>
+		<style> 
+			input[type=text] {
+ 			 	width: 50%;
+  				padding: 20px 20px;
+  				margin: 8px 0;
+  				box-sizing: border-box;
+			}
+
+			textarea {
+ 			 	width: 50%;
+  				padding: 20px 20px;
+  				margin: 8px 0;
+  				box-sizing: border-box;
+			}
+
+			.blog-subject {
+				font-size: 25px;
+				font-weight: 900;
+				margin-left: 80px;
+			}
+
+			.blog-date {
+				font-weight: bold;
+				font-size: 20px;
+				margin-left: 80px;
+			}
+
+			.blog-body {
+				font-size: 15px;
+				margin-left: 80px;
+			}
+
+			.blog-user {
+				font-size: 15px;
+				margin-left: 80px;
+			}
+
+			.blog-edit {
+				margin-left: 80px;
+			}
+			
+			a:link {
+				color: white;
+				background: transparent;
+				text-decoration: none;
+			}
+
+			a:visited {
+				color: white;
+				background: transparent;
+				text-decoration: none;
+			}
+		</style>
+	</head>
+
+	<body style="margin: 0">
+		<h1 style="background-color: black; color: white; margin: ; text-align: center; height: 45px">
+			<a href="/blog">
+			Blog Post
+			</a>
+		</h1>
+
+		{% block content %}
+		{% endblock %}
+
+	</body>
+</html>

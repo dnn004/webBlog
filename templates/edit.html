@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h3 style="background-color: gray; color: white; text-align: center;">
+	<a href="/blog/logout">
+	Logout
+	</a>
+</h3>
+
+<h2>Edit Post</h2>
+
+
+<form method="post">
+	<label>
+		<div>
+			Subject 
+			<input type="submit" name="delete" value="delete" style="float: right"/>
+		</div>
+
+		<input type="text" name="subject" value="{{subject}}" style="height: 50px">
+	</label>
+
+	<label>
+		<div>Blog</div>
+		<textarea name="blog" style="height: 600px; width: 50%">{{blog}}</textarea>
+	</label>
+	
+	<div class="error" style="color: red">{{error}}</div>
+
+	<input type="Submit">
+</form>
+
+<hr>
+
+{% endblock %}

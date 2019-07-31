@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h3 style="background-color: gray; color: white; text-align: center;">
+	<a href="/blog/login">
+	Login
+	</a>
+</h3>
+
+<h2>Registration</h2>
+
+<form method="post">
+	<label>
+		<div>Username</div>
+
+		<input type="text" name="username" value="{{username}}" style="height: 50px">
+	</label>
+
+	<label>
+		<div>Password</div>
+		<input type="password" name="password" value="{{password}}" style="height: 50px">
+	</label>
+	
+	<div class="error" style="color: red">{{error}}</div>
+
+	<input type="Submit">
+</form>
+
+<hr>
+
+{% for user in users %}
+	<div class="user">
+		<div>{{user.username}}</div>
+		<pre>{{user.password}}</pre>
+		<hr size="5px">
+	</div>
+{% endfor %}
+
+{% endblock %}

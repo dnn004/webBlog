@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h3 style="background-color: gray; color: white; text-align: center;">
+	<a href="/blog/newpost">
+	New Post
+	</a>
+</h3>
+
+{% if logged_in == "false" %}
+	<h3 style="background-color: gray; color: white; text-align: center;">
+		<a href="/blog/registration">
+		Registration
+		</a>
+	</h3>
+
+	<h3 style="background-color: gray; color: white; text-align: center;">
+		<a href="/blog/login">
+		Login
+		</a>
+	</h3>
+
+{% else %}
+	<h3 style="background-color: gray; color: white; text-align: center;">
+		<a href="/blog/logout">
+		Logout
+		</a>
+	</h3>
+{% endif %}
+
+{% for blog in blogs %}
+	<div class="blog">
+
+		<div class="blog-subject">
+			{{blog.subject}}
+
+			{% if blog.user == current_user %}
+
+				<button class="blog-edit" onclick="window.location.href = '/blog/edit/{{blog.post_id}}';" style="float: right">Edit</button>
+
+			{% endif %}
+
+		</div>
+		<div class="blog-date">{{blog.date}}</div>
+		<div class="blog-user">By {{blog.user}}</div>
+		<hr size="5px">
+
+		<pre class="blog-body">{{blog.blog}}</pre>
+
+		<br>
+		<br>
+	</div>
+
+
+
+{% endfor %}
+
+{% endblock %}
