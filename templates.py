@@ -27,6 +27,37 @@ jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
 
 SECRET = "azoyus"
 
+class Handler(webapp2.RequestHandler):
+	def write(self, *a, **kw):
+		self.response.out.write(*a,**kw)
+
+	def render_str(self, template, **params):
+		t = jinja_env.get_template(template)
+		return t.render(params)
+
+	def render(self, template, **kw):
+		self.write(self.render_str(template, **kw))
+
+class Blog(db.Model):
+	subject = db.StringProperty(required = True)
+	blog = db.TextProperty(required = True)
+	user = db.StringProperty(required = True)
+	post_id = db.IntegerProperty(required = True)
+	created = db.DateTimeProperty(auto_now_add = True)
+	date = db.DateProperty(auto_now_add = True)
+
+class User(db.Model):
+	username = db.StringProperty(required = True)
+	password = db.StringProperty(required = True)
+	created = db.DateTimeProperty(auto_now_add = True)
+
+class Comment(db.Model):
+	body = db.TextProperty(required = True)
+	username = db.StringProperty(required = True)
+	postID = db.IntegerProperty(required = True)
+	created = db.DateTimeProperty(auto_now_add = True)
+
+
 def hash_str(s):
 	return hmac.new(SECRET, s).hexdigest()
 
@@ -57,30 +88,20 @@ def check_user(name, pw):
 	else:
 		return "Username doesn't exist"
 
-class Handler(webapp2.RequestHandler):
-	def write(self, *a, **kw):
-		self.response.out.write(*a,**kw)
 
-	def render_str(self, template, **params):
-		t = jinja_env.get_template(template)
-		return t.render(params)
+# Shows all posts in a main page
+class MainBlogPage(Handler):
+	def handleAllPost(self):
+		blogs = db.GqlQuery("SELECT * FROM Blog "
+							"ORDER BY created DESC ")
+		loggedin_cookie_val = self.request.cookies.get("loggedin")
+		username_cookie_val = self.request.cookies.get("username")
+		self.render("all_post.html", blogs=blogs, logged_in=loggedin_cookie_val, current_user=username_cookie_val)
+	
+	def get(self):
+		self.handleAllPost()
 
-	def render(self, template, **kw):
-		self.write(self.render_str(template, **kw))
-
-class Blog(db.Model):
-	subject = db.StringProperty(required = True)
-	blog = db.TextProperty(required = True)
-	user = db.StringProperty(required = True)
-	post_id = db.IntegerProperty(required = True)
-	created = db.DateTimeProperty(auto_now_add = True)
-	date = db.DateProperty(auto_now_add = True)
-
-class User(db.Model):
-	username = db.StringProperty(required = True)
-	password = db.StringProperty(required = True)
-	created = db.DateTimeProperty(auto_now_add = True)
-
+# Type in a new post
 class NewPostHandler(Handler):
 
 	def handleNewPost(self, subject="", blog="", error=""):
@@ -118,31 +139,47 @@ class NewPostHandler(Handler):
 			error = "Please have both subject and blog content"
 			self.handleNewPost(subject, blog, error)
 
-class MainBlogPage(Handler):
-	def get(self):
-		self.handleAllPost()
-
-	def handleAllPost(self):
-		blogs = db.GqlQuery("SELECT * FROM Blog "
-							"ORDER BY created DESC ")
-		loggedin_cookie_val = self.request.cookies.get("loggedin")
-		username_cookie_val = self.request.cookies.get("username")
-		self.render("all_post.html", blogs=blogs, logged_in=loggedin_cookie_val, current_user=username_cookie_val)
-
+# View a post and its comments
 class PostHandler(Handler):
 
-	def renderNewPost(self, subject="", blog="", date="", user="", post_id=""):
+	def renderPost(self, subject="", blog="", date="", user="", post_id="", error=""):
+		int_post_id = int(post_id)
+
+		# Select the comments that have the postID the same as the post to be rendered
+		comments = db.GqlQuery("SELECT * FROM Comment "
+								"WHERE postID = %s " %int_post_id
+								+ "ORDER BY created ASC")
 		loggedin_cookie_val = self.request.cookies.get("loggedin")
-		self.render("post.html", subject=subject, blog=blog, date=date, user=user, post_id=post_id, logged_in=loggedin_cookie_val)
+		self.render("post.html", comments=comments, subject=subject, blog=blog, date=date, user=user, post_id=post_id, logged_in=loggedin_cookie_val, error=error)
 
 	def get(self, post_id):
-
 		a_post = Blog.get_by_id(int(post_id))
-		
-		self.renderNewPost(a_post.subject, a_post.blog, a_post.date, a_post.user, a_post.post_id)
+		self.renderPost(a_post.subject, a_post.blog, a_post.date, a_post.user, a_post.post_id)
 
+
+	def post(self, post_id):
+		postID = int(post_id)
+
+		comment_text = self.request.get("comment")
+		username_cookie_val = self.request.cookies.get("username")
+		a_post = Blog.get_by_id(postID)
+
+		if comment_text:
+			if username_cookie_val:
+				comment = Comment(body = comment_text, username = username_cookie_val, postID = postID)
+				comment.put()
+				self.renderPost(a_post.subject, a_post.blog, a_post.date, a_post.user, a_post.post_id)
+				time.sleep(0.3)
+				self.redirect_to("post", post_id=postID)
+			else:
+				error = "Please login first before commenting"
+				self.renderPost(a_post.subject, a_post.blog, a_post.date, a_post.user, a_post.post_id, error)
+		else:
+			error = "Empty comment"
+			self.renderPost(a_post.subject, a_post.blog, a_post.date, a_post.user, a_post.post_id, error)
+
+# Allows the user to edit one's own post
 class EditHandler(Handler):
-
 
 	def handleEditPost(self, subject="", blog="", error=""):
 		self.render("edit.html", subject=subject, blog=blog, error=error)
@@ -156,14 +193,15 @@ class EditHandler(Handler):
  		subject = self.request.get("subject")
 		blog = self.request.get("blog")
 		delete = self.request.get("delete")
-		#Check if both subject and blog content are typed in
 
+		# Check if a delete request has been receieved
 		if delete:
 			a_post = Blog.get_by_id(int(post_id))
 			a_post.delete()
 			time.sleep(0.3)
 			self.redirect("/blog")
 
+		# Check if both subject and blog content are typed in
 		elif subject and blog:
 
 			a_post = Blog.get_by_id(int(post_id))
@@ -179,23 +217,34 @@ class EditHandler(Handler):
 			error = "Please have both subject and blog content"
 			self.handleEditPost(subject, blog, error)
 
-
+# Allows the user to sign up with an account
 class RegistrationHandler(Handler):
 
 	def handleRegistration(self, username="", error=""):
 		users = db.GqlQuery("SELECT * FROM User "
 							"ORDER BY created DESC ")
-		self.render("registration.html", username=username, users=users)
+		self.render("registration.html", username=username, users=users, error=error)
 
 	def get(self):
 		self.handleRegistration()
 
 	def post(self):
+		users = db.GqlQuery("SELECT * FROM User "
+							"ORDER BY created DESC ")
+
 		username = self.request.get("username")
 		password = self.request.get("password")
 
 		if username and password:
 
+			# Check if username already exists
+			for user in users:
+				if user.username == username:
+					error = "Username already existed"
+					self.handleRegistration(username, error)
+					return
+
+			#if username exists, enters it into the database
 			encrypted_password = make_secure_val(password)
 			userInfo = User(username = username, password = encrypted_password)
 			userInfo.put()
@@ -210,6 +259,7 @@ class RegistrationHandler(Handler):
 			error = "Please have both username and password"
 			self.handleRegistration(username, error)
 
+# Shows a welcome message to a new user
 class WelcomeHandler(Handler):
 	def handleWelcome(self, username=""):
 		self.render("welcome.html", username=username)
@@ -223,6 +273,7 @@ class WelcomeHandler(Handler):
 		else:
 			self.redirect("/blog/registration")
 
+# Allows the user to login into an existing account
 class LoginHandler(Handler):
 	def LoginHandler(self, username="", error=""):
 		self.render("login.html", username=username, error=error)
@@ -248,6 +299,7 @@ class LoginHandler(Handler):
 			error = "Please have both username and password"
 			self.LoginHandler(username_input, error)
 
+# Allows the user to sign out
 class LogoutHandler(Handler):
 	def get(self):
 		self.response.delete_cookie("username")
