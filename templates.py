@@ -27,17 +27,6 @@ jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
 
 SECRET = "azoyus"
 
-class Handler(webapp2.RequestHandler):
-	def write(self, *a, **kw):
-		self.response.out.write(*a,**kw)
-
-	def render_str(self, template, **params):
-		t = jinja_env.get_template(template)
-		return t.render(params)
-
-	def render(self, template, **kw):
-		self.write(self.render_str(template, **kw))
-
 class Blog(db.Model):
 	subject = db.StringProperty(required = True)
 	blog = db.TextProperty(required = True)
@@ -45,6 +34,7 @@ class Blog(db.Model):
 	post_id = db.IntegerProperty(required = True)
 	created = db.DateTimeProperty(auto_now_add = True)
 	date = db.DateProperty(auto_now_add = True)
+	points = db.IntegerProperty(required = True)
 
 class User(db.Model):
 	username = db.StringProperty(required = True)
@@ -88,6 +78,17 @@ def check_user(name, pw):
 	else:
 		return "Username doesn't exist"
 
+# Basic functions for handling classes, taken from Udacity
+class Handler(webapp2.RequestHandler):
+	def write(self, *a, **kw):
+		self.response.out.write(*a,**kw)
+
+	def render_str(self, template, **params):
+		t = jinja_env.get_template(template)
+		return t.render(params)
+
+	def render(self, template, **kw):
+		self.write(self.render_str(template, **kw))
 
 # Shows all posts in a main page
 class MainBlogPage(Handler):
@@ -126,7 +127,7 @@ class NewPostHandler(Handler):
 			else:
 				username_cookie_val = "Anonymous"
 
-			post = Blog(subject = subject, blog = blog, user=username_cookie_val, post_id=0)
+			post = Blog(subject = subject, blog = blog, user=username_cookie_val, post_id=0, points=0)
 			post.put()
 			new_post_id = post.key().id()
 			post.post_id = new_post_id
@@ -142,41 +143,58 @@ class NewPostHandler(Handler):
 # View a post and its comments
 class PostHandler(Handler):
 
-	def renderPost(self, subject="", blog="", date="", user="", post_id="", error=""):
+	def renderPost(self, post_id="", error=""):
 		int_post_id = int(post_id)
 
 		# Select the comments that have the postID the same as the post to be rendered
 		comments = db.GqlQuery("SELECT * FROM Comment "
 								"WHERE postID = %s " %int_post_id
 								+ "ORDER BY created ASC")
+
+		# Just a blog list containing one blog ASK!
+		blogs = db.GqlQuery("SELECT * FROM Blog "
+							"WHERE post_id = %s " %int_post_id)
+
 		loggedin_cookie_val = self.request.cookies.get("loggedin")
-		self.render("post.html", comments=comments, subject=subject, blog=blog, date=date, user=user, post_id=post_id, logged_in=loggedin_cookie_val, error=error)
+		self.render("post.html", comments=comments, blogs=blogs, post_id=post_id, logged_in=loggedin_cookie_val, error=error)
 
 	def get(self, post_id):
-		a_post = Blog.get_by_id(int(post_id))
-		self.renderPost(a_post.subject, a_post.blog, a_post.date, a_post.user, a_post.post_id)
+		int_post_id = int(post_id)
+		a_post = Blog.get_by_id(int_post_id)
+		self.renderPost(post_id)
 
 
 	def post(self, post_id):
-		postID = int(post_id)
+		int_post_id = int(post_id)
 
 		comment_text = self.request.get("comment")
+		upvote = self.request.get("upvote")
+		downvote = self.request.get("downvote")
 		username_cookie_val = self.request.cookies.get("username")
-		a_post = Blog.get_by_id(postID)
 
 		if comment_text:
 			if username_cookie_val:
-				comment = Comment(body = comment_text, username = username_cookie_val, postID = postID)
+				comment = Comment(body = comment_text, username = username_cookie_val, postID = int_post_id)
 				comment.put()
-				self.renderPost(a_post.subject, a_post.blog, a_post.date, a_post.user, a_post.post_id)
+				self.renderPost(int_post_id)
 				time.sleep(0.3)
-				self.redirect_to("post", post_id=postID)
+				self.redirect_to("post", post_id=int_post_id)
 			else:
 				error = "Please login first before commenting"
-				self.renderPost(a_post.subject, a_post.blog, a_post.date, a_post.user, a_post.post_id, error)
+				self.renderPost(int_post_id, error)
 		else:
 			error = "Empty comment"
-			self.renderPost(a_post.subject, a_post.blog, a_post.date, a_post.user, a_post.post_id, error)
+			self.renderPost(int_post_id, error)
+
+		a_post = Blog.get_by_id(int_post_id)
+
+		if upvote:
+			a_post.points = a_post.points + 1
+		elif downvote:
+			a_post.points = a_post.points - 1
+
+		a_post.put()
+		self.redirect_to("post", post_id=int_post_id)
 
 # Allows the user to edit one's own post
 class EditHandler(Handler):

@@ -17,20 +17,33 @@
 	</h3>
 {% endif %}
 
-		<div class="blog-subject">
-			{{subject}}
+		
+
+
+{% for blog in blogs %}
+
+	<div class="blog-subject">
+			{{blog.subject}}
 
 			<button class="blog-edit" onclick="window.location.href = '/blog/edit/{{post_id}}';" style="float: right">Edit</button>
 
-		</div>
+	</div>
 
-<div class="blog-date content">{{date}}</div>
+	<div class="blog">
+	<div class="blog-date content">{{blog.date}}</div>
 
-<div class="blog-user content">By {{user}}</div>
-<hr>
+	<div class="blog-user content">By {{blog.user}}</div>
+	<hr>
 
-<pre class="blog-body content">{{blog}}</pre>
+	<pre class="blog-body content">{{blog.blog}}</pre>
 
+	<div class="blog-points content">Points: {{blog.points}}</div>
+	</div>
+{% endfor %}
+<form method="post" class="content">
+	<input type="submit" name="upvote" value="▲">
+	<input type="submit" name="downvote" value="▼">
+</form>
 
 <br>
 <br>
@@ -47,6 +60,7 @@
 {% endfor %}
 
 <form method="post">
+	
 	<label>
 		<div class="content">Type your comment here:</div>
 		<textarea name="comment" class="content" style="height: 200px; width: 50%"></textarea>
