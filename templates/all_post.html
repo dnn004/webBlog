@@ -33,7 +33,9 @@
 	<div class="blog">
 
 		<div class="blog-subject">
+			<a id="posts" onclick="window.location='/blog/' + {{blog.post_id}}" href="#">
 			{{blog.subject}}
+			</a>
 
 			{% if blog.user == current_user %}
 

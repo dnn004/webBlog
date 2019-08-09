@@ -24,12 +24,37 @@
 
 		</div>
 
-<div class="blog-date">{{date}}</div>
+<div class="blog-date content">{{date}}</div>
 
-<div class="blog-user">By {{user}}</div>
+<div class="blog-user content">By {{user}}</div>
 <hr>
 
-<pre class="blog-body">{{blog}}</pre>
+<pre class="blog-body content">{{blog}}</pre>
 
+
+<br>
+<br>
+
+<h2 class="content">Comments</h2>
+{% for comment in comments %}
+	<div class="comment">
+		<div class="content">{{comment.body}}</div>
+		<div class="content">By {{comment.username}}</div>
+		<hr size="5px">
+		<pre class="content">{{comment.created}}</pre>
+		<br>
+	</div>
+{% endfor %}
+
+<form method="post">
+	<label>
+		<div class="content">Type your comment here:</div>
+		<textarea name="comment" class="content" style="height: 200px; width: 50%"></textarea>
+	</label>
+	
+	<div class="error content" style="color: red">{{error}}</div>
+
+	<input type="Submit"class="error content">
+</form>
 
 {% endblock %}
