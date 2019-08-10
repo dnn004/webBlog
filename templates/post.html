@@ -18,7 +18,8 @@
 {% endif %}
 
 		
-
+<div>Username: {{username}} </div>
+<div>Post ID: {{post_id}} </div>
 
 {% for blog in blogs %}
 
@@ -40,6 +41,32 @@
 	<div class="blog-points content">Points: {{blog.points}}</div>
 	</div>
 {% endfor %}
+
+
+
+<!-- {% if logged_in == "true" %}
+		
+	{% for vote in votes %}
+		{% if vote.username == username %}
+			{% set voted = vote.value %}
+		{% endif %}
+	{% endfor %}
+
+	{% if voted == "up" %}
+		<form method="post" class="content">
+			▲
+			<input type="submit" name="downvote" value="▼">
+		</form>
+	{% else %}
+		<form method="post" class="content">
+			<input type="submit" name="upvote" value="▲">
+			▼
+		</form>
+
+	{% endif %}
+
+{% endif %} -->
+
 <form method="post" class="content">
 	<input type="submit" name="upvote" value="▲">
 	<input type="submit" name="downvote" value="▼">
@@ -59,6 +86,7 @@
 	</div>
 {% endfor %}
 
+{% if logged_in == "true" %}
 <form method="post">
 	
 	<label>
@@ -70,5 +98,6 @@
 
 	<input type="Submit"class="error content">
 </form>
+{% endif %}
 
 {% endblock %}
