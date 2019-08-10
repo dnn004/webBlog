@@ -8,27 +8,25 @@
 	</a>
 </h3>
 
-{% if logged_in == "false" %}
+{% if logged_in == "true" %}
+    <h3 style="background-color: gray; color: white; text-align: center;">
+		<a href="/blog/logout">
+		Logout
+		</a>
+    </h3>
+{% else %}
 	<h3 style="background-color: gray; color: white; text-align: center;">
 		<a href="/blog/registration">
 		Registration
 		</a>
 	</h3>
-
 	<h3 style="background-color: gray; color: white; text-align: center;">
 		<a href="/blog/login">
 		Login
 		</a>
 	</h3>
-
-{% else %}
-	<h3 style="background-color: gray; color: white; text-align: center;">
-		<a href="/blog/logout">
-		Logout
-		</a>
 {% endif %}
-	</h3>
-
+	
 {% for blog in blogs %}
 	<div class="blog">
 
@@ -53,8 +51,6 @@
 		<br>
 		<br>
 	</div>
-
-
 
 {% endfor %}
 

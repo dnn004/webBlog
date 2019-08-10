@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import time
 import jinja2
 import webapp2
@@ -21,8 +20,7 @@ import hmac
 
 from google.appengine.ext import db
 
-template_dir = os.path.join(os.path.dirname(__file__), "templates")
-jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
+jinja_env = jinja2.Environment(loader = jinja2.PackageLoader("templates"),
 								autoescape = True)
 
 SECRET = "azoyus"
@@ -51,7 +49,6 @@ class Voted(db.Model):
 	username = db.StringProperty(required = True)
 	postID = db.IntegerProperty(required = True)
 	value = db.StringProperty(required = True)
-	# voteID = db.IntegerProperty(required = True)
 
 def hash_str(s):
 	return hmac.new(SECRET, s).hexdigest()
@@ -184,11 +181,13 @@ class PostHandler(Handler):
 			comment = Comment(body = comment_text, username = username_cookie_val, postID = int_post_id)
 			comment.put()
 			self.renderPost(int_post_id)
-			time.sleep(0.3)
+			# time.sleep(0.3)
 			self.redirect_to("post", post_id=int_post_id)
 		else:
 			error = "Empty comment"
-			self.renderPost(int_post_id, error)
+			self.renderPost(int_post_id)
+			# time.sleep(0.3)
+			self.redirect_to("post", post_id=int_post_id)
 
 		a_post = Blog.get_by_id(int_post_id)
 

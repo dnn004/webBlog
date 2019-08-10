@@ -3,36 +3,37 @@
 {% block content %}
 
 {% if logged_in == "false" %}
+
 	<h3 style="background-color: gray; color: white; text-align: center;">
 		<a href="/blog/login">
 		Login
 		</a>
 	</h3>
-
 {% else %}
 	<h3 style="background-color: gray; color: white; text-align: center;">
 		<a href="/blog/logout">
 		Logout
 		</a>
 	</h3>
+
+    <div class="blog-subject">
+	    {{blog.subject}}
+
+	    <button class="blog-edit" onclick="window.location.href = '/blog/edit/{{post_id}}';" style="float: right">Edit</button>
+
+    </div>
+
 {% endif %}
 
-<div class="blog-subject">
-	{{blog.subject}}
-
-	<button class="blog-edit" onclick="window.location.href = '/blog/edit/{{post_id}}';" style="float: right">Edit</button>
-
-</div>
-
 <div class="blog">
-<div class="blog-date content">{{blog.date}}</div>
+	<div class="blog-date content">{{blog.date}}</div>
 
-<div class="blog-user content">By {{blog.user}}</div>
-<hr>
+	<div class="blog-user content">By {{blog.user}}</div>
+	<hr>
 
-<pre class="blog-body content">{{blog.blog}}</pre>
+	<pre class="blog-body content">{{blog.blog}}</pre>
 
-<div class="blog-points content">Points: {{blog.points}}</div>
+	<div class="blog-points content">Points: {{blog.points}}</div>
 </div>
 
 {% if logged_in == "true" %}
@@ -54,7 +55,6 @@
 			<input type="submit" name="upvote" value="▲">
 			<input type="submit" name="downvote" value="▼">
 		</div>
-
 	{% endif %}
 	</form>
 
