@@ -157,15 +157,14 @@ class PostHandler(Handler):
 								"WHERE postID = %s " %int_post_id
 								+ "ORDER BY created ASC")
 
-		# Just a blog list containing one blog ASK!
-		blogs = db.GqlQuery("SELECT * FROM Blog "
-							"WHERE post_id = %s " %int_post_id)
+		blog = db.GqlQuery("SELECT * FROM Blog "
+							"WHERE post_id = %s " %int_post_id).get()
 
 		vote = db.GqlQuery("SELECT * FROM Voted "
 							"WHERE postID = %d AND username = '%s'" %(int_post_id, username_cookie_val)).get()
 
 		loggedin_cookie_val = self.request.cookies.get("loggedin")
-		self.render("post.html", username=username_cookie_val, comments=comments, blogs=blogs, vote=vote, post_id=post_id, logged_in=loggedin_cookie_val, error=error)
+		self.render("post.html", username=username_cookie_val, comments=comments, blog=blog, vote=vote, post_id=post_id, logged_in=loggedin_cookie_val, error=error)
 
 	def get(self, post_id):
 		int_post_id = int(post_id)

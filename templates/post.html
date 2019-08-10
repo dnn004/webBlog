@@ -17,32 +17,23 @@
 	</h3>
 {% endif %}
 
-		
-<div>Username: {{username}} </div>
-<div>Post ID: {{post_id}} </div>
+<div class="blog-subject">
+	{{blog.subject}}
 
-{% for blog in blogs %}
+	<button class="blog-edit" onclick="window.location.href = '/blog/edit/{{post_id}}';" style="float: right">Edit</button>
 
-	<div class="blog-subject">
-			{{blog.subject}}
+</div>
 
-			<button class="blog-edit" onclick="window.location.href = '/blog/edit/{{post_id}}';" style="float: right">Edit</button>
+<div class="blog">
+<div class="blog-date content">{{blog.date}}</div>
 
-	</div>
+<div class="blog-user content">By {{blog.user}}</div>
+<hr>
 
-	<div class="blog">
-	<div class="blog-date content">{{blog.date}}</div>
+<pre class="blog-body content">{{blog.blog}}</pre>
 
-	<div class="blog-user content">By {{blog.user}}</div>
-	<hr>
-
-	<pre class="blog-body content">{{blog.blog}}</pre>
-
-	<div class="blog-points content">Points: {{blog.points}}</div>
-	</div>
-{% endfor %}
-
-
+<div class="blog-points content">Points: {{blog.points}}</div>
+</div>
 
 {% if logged_in == "true" %}
 
