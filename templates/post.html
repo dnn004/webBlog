@@ -44,33 +44,30 @@
 
 
 
-<!-- {% if logged_in == "true" %}
-		
-	{% for vote in votes %}
-		{% if vote.username == username %}
-			{% set voted = vote.value %}
-		{% endif %}
-	{% endfor %}
+{% if logged_in == "true" %}
 
-	{% if voted == "up" %}
-		<form method="post" class="content">
+	<form method="post" class="content">
+	{% if vote.value == "up" %}
+
+		<div>
 			▲
 			<input type="submit" name="downvote" value="▼">
-		</form>
-	{% else %}
-		<form method="post" class="content">
+		</div>		
+	{% elif vote.value == "down" %}
+		<div>
 			<input type="submit" name="upvote" value="▲">
 			▼
-		</form>
+		</div>
+	{% else %}
+		<div>
+			<input type="submit" name="upvote" value="▲">
+			<input type="submit" name="downvote" value="▼">
+		</div>
 
 	{% endif %}
+	</form>
 
-{% endif %} -->
-
-<form method="post" class="content">
-	<input type="submit" name="upvote" value="▲">
-	<input type="submit" name="downvote" value="▼">
-</form>
+{% endif %}
 
 <br>
 <br>

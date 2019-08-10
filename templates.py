@@ -51,7 +51,7 @@ class Voted(db.Model):
 	username = db.StringProperty(required = True)
 	postID = db.IntegerProperty(required = True)
 	value = db.StringProperty(required = True)
-	voteID = db.IntegerProperty(required = True)
+	# voteID = db.IntegerProperty(required = True)
 
 def hash_str(s):
 	return hmac.new(SECRET, s).hexdigest()
@@ -151,6 +151,7 @@ class PostHandler(Handler):
 	def renderPost(self, post_id="", error=""):
 		int_post_id = int(post_id)
 		username_cookie_val = str(self.request.cookies.get("username"))
+
 		# Select the comments that have the postID the same as the post to be rendered
 		comments = db.GqlQuery("SELECT * FROM Comment "
 								"WHERE postID = %s " %int_post_id
@@ -160,16 +161,13 @@ class PostHandler(Handler):
 		blogs = db.GqlQuery("SELECT * FROM Blog "
 							"WHERE post_id = %s " %int_post_id)
 
-		votes = db.GqlQuery("SELECT * FROM Voted "
-							# "WHERE username = '%s'" %username_cookie_val)
-							"WHERE postID = %d AND username = '%s'" %(int_post_id, username_cookie_val))
-							# "WHERE postID = '5066549580791808' AND username = '18dnguyen32'")
+		vote = db.GqlQuery("SELECT * FROM Voted "
+							"WHERE postID = %d AND username = '%s'" %(int_post_id, username_cookie_val)).get()
 
 		loggedin_cookie_val = self.request.cookies.get("loggedin")
-		self.render("post.html", username=username_cookie_val, comments=comments, blogs=blogs, votes=votes, post_id=post_id, logged_in=loggedin_cookie_val, error=error)
+		self.render("post.html", username=username_cookie_val, comments=comments, blogs=blogs, vote=vote, post_id=post_id, logged_in=loggedin_cookie_val, error=error)
 
 	def get(self, post_id):
-		print('PRINTED')
 		int_post_id = int(post_id)
 		a_post = Blog.get_by_id(int_post_id)
 		self.renderPost(post_id)
@@ -184,45 +182,37 @@ class PostHandler(Handler):
 		username_cookie_val = self.request.cookies.get("username")
 
 		if comment_text:
-				comment = Comment(body = comment_text, username = username_cookie_val, postID = int_post_id)
-				comment.put()
-				self.renderPost(int_post_id)
-				time.sleep(0.3)
-				self.redirect_to("post", post_id=int_post_id)
+			comment = Comment(body = comment_text, username = username_cookie_val, postID = int_post_id)
+			comment.put()
+			self.renderPost(int_post_id)
+			time.sleep(0.3)
+			self.redirect_to("post", post_id=int_post_id)
 		else:
 			error = "Empty comment"
 			self.renderPost(int_post_id, error)
 
 		a_post = Blog.get_by_id(int_post_id)
 
-		# vote = db.GqlQuery("SELECT * FROM Voted "
-		# 					"WHERE postID = %d AND username = '%s'" %(int_post_id, username_cookie_val))
+		vote = db.GqlQuery("SELECT * FROM Voted "
+							"WHERE postID = %d AND username = '%s'" %(int_post_id, username_cookie_val)).get()
 
-
-		# if !voted
-
-		# voted = Voted(username = username_cookie_val,  postID = int_post_id, value="none", voteID="0")
-
-		# if upvote:
-		# 	a_post.points = a_post.points + 1
-		# 	# voted = Voted(username = username_cookie_val,  postID = int_post_id, value="up", voteID="0")
-		# 	voted.value = "up"
-		# 	voted.put()
-		# 	new_vote_id = voted.key().id
-		# 	voted.voteID = new_vote_id
-		# 	voted.put()
-
-		# elif downvote:
-		# 	a_post.points = a_post.points - 1
-		# 	# voted = Voted(username = username_cookie_val,  postID = int_post_id, value="down", voteID="0")
-		# 	voted.value = "down"
-		# 	voted.put()
-		# 	new_vote_id = voted.key().id
-		# 	voted.voteID = new_vote_id
-		# 	voted.put()
-
-		# self.response.set_cookie("vote", "voted")
-		a_post.put()
+		if upvote:
+			a_post.points = a_post.points + 1
+			if vote:
+				vote.delete()
+			else:
+				vote = Voted(username = username_cookie_val,  postID = int_post_id, value="up")
+				vote.put()
+		elif downvote:
+			a_post.points = a_post.points - 1
+			if vote:
+				vote.delete()
+			else:
+				vote = Voted(username = username_cookie_val,  postID = int_post_id, value="down")
+				vote.put()
+		a_post.put()		
+		self.renderPost(int_post_id)
+		time.sleep(0.3)
 		self.redirect_to("post", post_id=int_post_id)
 
 # Allows the user to edit one's own post
